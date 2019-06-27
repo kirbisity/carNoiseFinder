@@ -1,10 +1,10 @@
-#include "Car.h"
 #include <vector>
 #include <string>
 #include <iostream>
+/* in current directory */
+#include "Car.h"
+
 using namespace std;
-
-
 
 Car::Car(void) {
 	target_noise = 0;
@@ -26,13 +26,12 @@ void Car::guess_displacement(void) {
 	}
 }
 
-/* We used third degree curve fitting to predict noises at different speeds */
-void noises_curve_fitting(void) {
-
+void Car::noises_curve_fitting(void) {
+	equation.fit(speeds, noises); // speed is the x axis, noise is the y axis
 }
 
-void Car::guess_noise(void) {
-	target_noise = noises[5];
+void Car::guess_noise(double speed) {
+	target_noise = equation.get_value(speed);
 }
 
 void Car::print(void) const {
@@ -44,8 +43,11 @@ void Car::print(void) const {
 	for (vector<double>::const_iterator i = noises.begin(); i != noises.end(); ++i) {
 	    cout << *i << " ";
 	}
-	cout << target_noise << " ";
+	if (target_noise != 0) {
+		cout << "predicted["<< target_noise << "] ";
+	}
 	cout << endl;
+	equation.print();
 }
 
 void Car::print_displacement_noise(void) const {

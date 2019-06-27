@@ -4,6 +4,8 @@
 
 #include <vector>
 #include <string>
+/* in current directory */
+#include "Polynomial.h"
 using namespace std;
 
 /*
@@ -17,11 +19,14 @@ public:
 	int year;
 	double displacement;
 	double target_noise;
+	vector<double> speeds;
 	vector<double> noises;
-	Car(void);
+	Polynomial equation;
 
+	Car(void);
 	void guess_displacement(void);
-	void guess_noise(void);
+	void noises_curve_fitting(void);
+	void guess_noise(double speed);
 	void print(void) const;
 	void print_displacement_noise(void) const;
 	void print_year_noise(void) const;

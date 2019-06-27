@@ -1,5 +1,3 @@
-#include "Car.h"
-
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -11,11 +9,14 @@
 #include <cstdlib>
 #include <algorithm>
 #include <unordered_map>
+/* in current directory */
+#include "Car.h"
+
 using namespace std;
 
 #define NOISEENTRY 6
 
-/* g++ parser.cpp Car.cpp -o parser.o */
+/* g++ parser.cpp Car.cpp Polynomial.cpp -o parser.o */
 
 int main() {
 	vector<Car> cars;
@@ -57,8 +58,15 @@ int main() {
 			Car car;
 			car.name = name;
 			car.year = year;
+			car.speeds.push_back(0);
+			car.speeds.push_back(50);
+			car.speeds.push_back(80);
+			car.speeds.push_back(100);
+			car.speeds.push_back(120);
+			car.speeds.push_back(140);
 			car.noises = noises;
 			car.guess_displacement();
+			car.noises_curve_fitting();
 			cars.push_back(car);
 		}
 	}
@@ -85,24 +93,32 @@ int main() {
 			    }
 			}
 		}
-		else if (input == "140") {
+		else if ((atof(input.c_str())!=0) || (input=="0") || (input=="0.0")) {
+			double speed = atof(input.c_str());
+			if (speed < 0) {
+				cout << "speed should not be negative" << endl;
+				continue;
+			}
+			for (vector<Car>::iterator i = cars.begin(); i != cars.end(); ++i) {
+			    i->guess_noise(speed);
+			}
 			cout << "Enter \"0\" to print sorted by noise at "<< input <<"km/h increasing order" << endl;
 			cout << "Enter \"1\" to print sorted by noise at "<< input <<" decreasing order" << endl;
 			getline(cin, input);
-			for (vector<Car>::iterator i = cars.begin(); i != cars.end(); ++i) {
-			    //i->print_displacement_noise();
-			    i->guess_noise();
-			}
 			if (input == "0") {
 				sort(cars.begin(), cars.end(), compare_noise_up);
 			}
-			else {
+			else if (input == "1") {
 				sort(cars.begin(), cars.end(), compare_noise_down);
 			}
-			for (vector<Car>::iterator i = cars.begin(); i != cars.end(); ++i) {
-			    //i->print_displacement_noise();
-			    i->print();
+			else {
+				continue;
 			}
+			for (vector<Car>::iterator i = cars.begin(); i != cars.end(); ++i) {
+			    i->print();
+			    i->target_noise=0;
+			}
+			cout<<"predicted speeds are at "<<speed<<" km/h"<<endl;
 		}
 		else if (input == "q") {
 			break;
