@@ -16,7 +16,7 @@ using namespace std;
 
 #define NOISEENTRY 6
 
-/* g++ parser.cpp Car.cpp Polynomial.cpp -o parser.o */
+/* g++ main.cpp Car.cpp Polynomial.cpp -o main.o */
 
 int main() {
 	vector<Car> cars;
@@ -75,6 +75,7 @@ int main() {
 		string input = "";
 		cout << "Enter the \"xxx\"km/h to print car noise data sorted by noise at the desired speed" << endl;
 		cout << "Enter \"ed\" to print car noise data sorted by engine displacement" << endl;
+		cout << "Enter \"s\" to search for your car" << endl;
 		cout << "Enter \"q\" to quit" << endl;
 		getline(cin, input);
 		if (input == "ed") {
@@ -99,6 +100,10 @@ int main() {
 				cout << "speed should not be negative" << endl;
 				continue;
 			}
+			if (speed > 400) {
+				cout << "speed should not be above 400km/h" << endl;
+				continue;
+			}
 			for (vector<Car>::iterator i = cars.begin(); i != cars.end(); ++i) {
 			    i->guess_noise(speed);
 			}
@@ -120,16 +125,70 @@ int main() {
 			}
 			cout<<"predicted speeds are at "<<speed<<" km/h"<<endl;
 		}
+		else if (input == "s") {
+			cout << "Enter the name of the car" << endl;
+			getline(cin, input);
+			stringstream inputs(input);
+			istream_iterator<string> ips(inputs);
+			istream_iterator<string> ipe;
+			vector<string> carnames(ips, ipe);
+			vector<Car> legitcars;
+			int match = 0;
+			for (vector<Car>::iterator i = cars.begin(); i != cars.end(); ++i) {
+				int legit = 1;
+				for (vector<string>::iterator j = carnames.begin(); j != carnames.end(); ++j) {
+					int found = 0;
+					for (vector<string>::iterator k = i->name.begin(); k != i->name.end(); ++k) {
+						if (similar_name(*j, *k)) { // use edit distance on every pair of words to find matches
+							found++;
+						}
+					}
+					if (found == 0) {
+						legit = 0;
+					}
+				}
+				if (legit) {
+					legitcars.push_back(*i);
+					match++;
+				}
+			}
+			if (match == 0) {
+				cout<<"no car with the name was found"<<endl;
+			}
+			else {
+				cout << "Enter the \"xxx\"km/h to print the noise data of the car" << endl;
+				getline(cin, input);
+				double speed = atof(input.c_str());
+				if (speed < 0) {
+					cout << "speed should not be negative" << endl;
+					continue;
+				}
+				if (speed > 400) {
+					cout << "speed should not be above 400km/h" << endl;
+					continue;
+				}
+				for (vector<Car>::iterator i = legitcars.begin(); i != legitcars.end(); ++i) {
+					i->guess_noise(speed);
+					i->print();
+				    i->target_noise=0;
+				}
+				cout<<"predicted speeds are at "<<speed<<" km/h"<<endl;
+			}
+		}
 		else if (input == "q") {
 			break;
 		}
 		else {
 			cout << "Unknown command: " << input << endl;
 		}
-		for (int i=0; i<2; ++i) {
-			cout<<endl;
+		cout<<endl;
+		cout << "Enter to continue" << endl;
+		getline(cin, input);
+		if (input == "q") {
+			break;
 		}
 	}
+
 	data.close();
 	return 0;
 }
