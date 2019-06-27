@@ -11,31 +11,40 @@
 #include <unordered_map>
 /* in current directory */
 #include "Car.h"
+#include "parser.h"
 
 using namespace std;
 
 #define NOISEENTRY 6
 
-/* g++ main.cpp Car.cpp Polynomial.cpp -o main.o */
+/* g++ main.cpp parser.cpp Car.cpp Polynomial.cpp -o main.o */
 
 int main() {
 	vector<Car> cars;
-	ifstream data("data.txt");
+	vector<double> speedentries;
+	ifstream data;
+	data.open("data.txt");
+	ofstream output;
+	output.open ("output.txt");
 	if(!data) {
 	    cout << "Cannot open input file" << endl;
 	    return 1;
 	}
-	while (data) {
-		string line;
+	if(!output) {
+	    cout << "Cannot open output file" << endl;
+	    return 1;
+	}
+	string line;
+	if (data) {
 		getline(data, line);
-		stringstream ss(line);
-		istream_iterator<string> begin(ss);
-		istream_iterator<string> end;
-		vector<string> items(begin, end);
-		//print out
-		//copy(vstrings.begin(), vstrings.end(), ostream_iterator<string>(std::cout, "\n"));
+		speedentries = parse_tabs(line);
+	}
+	
+	while (data) {
+		getline(data, line);
+		vector<string> items = split(line);
 		vector<string>::const_iterator i = items.end()-1;
-		if ((items.size() > 7) && (atof(i->c_str()) != 0)) { // valid entry
+		if ((items.size() > NOISEENTRY) && (atof(i->c_str()) != 0)) {
 			vector<string> name;
 			int year;
 			vector<double> noises;
@@ -55,16 +64,7 @@ int main() {
 	    	}
 	    	reverse(name.begin(), name.end());
 	    	reverse(noises.begin(), noises.end());
-			Car car;
-			car.name = name;
-			car.year = year;
-			car.speeds.push_back(0);
-			car.speeds.push_back(50);
-			car.speeds.push_back(80);
-			car.speeds.push_back(100);
-			car.speeds.push_back(120);
-			car.speeds.push_back(140);
-			car.noises = noises;
+			Car car(name, year, speedentries, noises);
 			car.guess_displacement();
 			car.noises_curve_fitting();
 			cars.push_back(car);
@@ -73,14 +73,14 @@ int main() {
 	
 	while (1) {
 		string input = "";
-		cout << "Enter the \"xxx\"km/h to print car noise data sorted by noise at the desired speed" << endl;
-		cout << "Enter \"ed\" to print car noise data sorted by engine displacement" << endl;
 		cout << "Enter \"s\" to search for your car" << endl;
+		cout << "Enter \"xxx\"km/h to list noise data sorted by noise at the desired speed" << endl;
+		cout << "Enter \"ed\" to list noise data sorted by engine displacement" << endl;
 		cout << "Enter \"q\" to quit" << endl;
 		getline(cin, input);
 		if (input == "ed") {
-			cout << "Enter \"0\" to print sorted by engine displacement increasing order" << endl;
-			cout << "Enter \"1\" to print sorted by engine displacement decreasing order" << endl;
+			cout << "Enter \"0\" to list noises by engine displacement increasing order" << endl;
+			cout << "Enter \"1\" to list noises by engine displacement decreasing order" << endl;
 			getline(cin, input);
 			if (input == "0") {
 				sort(cars.begin(), cars.end(), compare_engine_up);
@@ -90,7 +90,8 @@ int main() {
 			}
 			for (vector<Car>::iterator i = cars.begin(); i != cars.end(); ++i) {
 			    if (i->displacement != 0) {
-			    	i->print();
+			    	cout << i->print();
+			    	output << i->print();
 			    }
 			}
 		}
@@ -107,8 +108,8 @@ int main() {
 			for (vector<Car>::iterator i = cars.begin(); i != cars.end(); ++i) {
 			    i->guess_noise(speed);
 			}
-			cout << "Enter \"0\" to print sorted by noise at "<< input <<"km/h increasing order" << endl;
-			cout << "Enter \"1\" to print sorted by noise at "<< input <<" decreasing order" << endl;
+			cout << "Enter \"0\" to list noises at "<< input <<"km/h increasing order" << endl;
+			cout << "Enter \"1\" to list noises at "<< input <<"km/h decreasing order" << endl;
 			getline(cin, input);
 			if (input == "0") {
 				sort(cars.begin(), cars.end(), compare_noise_up);
@@ -120,10 +121,11 @@ int main() {
 				continue;
 			}
 			for (vector<Car>::iterator i = cars.begin(); i != cars.end(); ++i) {
-			    i->print();
+			    cout << i->print();
+			    output << i->print();
 			    i->target_noise=0;
 			}
-			cout<<"predicted speeds are at "<<speed<<" km/h"<<endl;
+			cout<<"predicted noises are at "<<speed<<" km/h"<<endl;
 		}
 		else if (input == "s") {
 			cout << "Enter the name of the car" << endl;
@@ -169,10 +171,10 @@ int main() {
 				}
 				for (vector<Car>::iterator i = legitcars.begin(); i != legitcars.end(); ++i) {
 					i->guess_noise(speed);
-					i->print();
+					cout << i->print();
 				    i->target_noise=0;
 				}
-				cout<<"predicted speeds are at "<<speed<<" km/h"<<endl;
+				cout<<"predicted noises are at "<<speed<<" km/h"<<endl;
 			}
 		}
 		else if (input == "q") {
@@ -190,5 +192,6 @@ int main() {
 	}
 
 	data.close();
+	output.close();
 	return 0;
 }

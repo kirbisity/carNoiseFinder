@@ -9,7 +9,7 @@
 using namespace std;
 
 Polynomial::Polynomial(void) {
-	degree = 2;
+	degree = 1;
 }
 
 /* n: number of data points*/

@@ -24,10 +24,11 @@ public:
 	Polynomial equation;
 
 	Car(void);
+	Car(vector<string> n, int y, vector<double> se, vector<double> ns);
 	void guess_displacement(void);
 	void noises_curve_fitting(void);
 	void guess_noise(double speed);
-	void print(void) const;
+	string print(void) const;
 	void print_displacement_noise(void) const;
 	void print_year_noise(void) const;
 };

@@ -12,6 +12,13 @@ using namespace std;
 Car::Car(void) {
 	target_noise = 0;
 }
+Car::Car(vector<string> n, int y, vector<double> se, vector<double> ns) {
+	name = n;
+	year = y;
+	speeds = se;
+	noises = ns;
+	target_noise = 0;
+}
 
 void Car::guess_displacement(void) {
 	int found = 0;
@@ -32,32 +39,32 @@ void Car::guess_displacement(void) {
 void Car::noises_curve_fitting(void) {
 	vector<double> energies;
 	for (vector<double>::const_iterator i = noises.begin(); i != noises.end(); ++i) {
-		energies.push_back(db_to_energy(*i));
+		energies.push_back(db_to_energy(*i)/1000);
 	}
 	equation.fit(speeds, energies); // speed is the x axis, energy is the y axis
 }
 
 void Car::guess_noise(double speed) {
-	target_noise = energy_to_db(equation.get_value(speed));
+	target_noise = energy_to_db(1000*equation.get_value(speed));
 }
 
-void Car::print(void) const {
+string Car::print(void) const {
+	string text;
 	for (vector<string>::const_iterator i = name.begin(); i != name.end(); ++i) {
-	    cout << *i << " ";
+	    text += *i + " ";
 	}
-	cout << displacement << " ";
-	cout << year << " ";
-
+	text += to_string(year) + " ";
 	if (target_noise != 0) {
-		cout << " predicted[ "<< (int) target_noise << "dB ] ";
+		int tn = (int) target_noise;
+		text += " predicted[ " + to_string(tn) + "dB ] ";
 	}
 	else {
 		for (vector<double>::const_iterator i = noises.begin(); i != noises.end(); ++i) {
-		    cout << *i << " ";
+		    text += to_string(*i) + " ";
 		}
 	}
-	cout << endl;
-	//equation.print();
+	text += "\n";
+	return text;
 }
 
 void Car::print_displacement_noise(void) const {
