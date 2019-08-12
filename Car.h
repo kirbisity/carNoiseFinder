@@ -1,9 +1,6 @@
 #ifndef CAR_H
 #define CAR_H
 #endif
-
-#include <vector>
-#include <string>
 /* in current directory */
 #include "Polynomial.h"
 using namespace std;
@@ -29,6 +26,7 @@ public:
 	void noises_curve_fitting(void);
 	void guess_noise(double speed);
 	string print(void) const;
+	string print_name(void) const;
 	void print_displacement_noise(void) const;
 	void print_year_noise(void) const;
 };
@@ -41,3 +39,4 @@ int edit_distance(string s0, string s1);
 bool similar_name(string s0, string s1);
 double energy_to_db(double e);
 double db_to_energy(double d);
+vector<Car> search_car(vector<Car>& cars, string input);

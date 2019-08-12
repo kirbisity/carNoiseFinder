@@ -1,6 +1,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <sstream>
 #include <math.h>
 /* in current directory */
 #include "Car.h"
@@ -64,6 +65,14 @@ string Car::print(void) const {
 		}
 	}
 	text += "\n";
+	return text;
+}
+
+string Car::print_name(void) const {
+	string text;
+	for (vector<string>::const_iterator i = name.begin(); i != name.end(); ++i) {
+	    text += *i + " ";
+	}
 	return text;
 }
 
@@ -139,4 +148,32 @@ double energy_to_db(double e) {
 }
 double db_to_energy(double d) {
 	return pow(10, (d/10));
+}
+
+vector<Car> search_car(vector<Car>& cars, string input) {
+	stringstream inputs(input);
+	istream_iterator<string> ips(inputs);
+	istream_iterator<string> ipe;
+	vector<string> carnames(ips, ipe);
+	vector<Car> legitcars;
+	int match = 0;
+	for (vector<Car>::iterator i = cars.begin(); i != cars.end(); ++i) {
+		int legit = 1;
+		for (vector<string>::iterator j = carnames.begin(); j != carnames.end(); ++j) {
+			int found = 0;
+			for (vector<string>::iterator k = i->name.begin(); k != i->name.end(); ++k) {
+				if (similar_name(*j, *k)) { // use edit distance on every pair of words to find matches
+					found++;
+				}
+			}
+			if (found == 0) {
+				legit = 0;
+			}
+		}
+		if (legit) {
+			legitcars.push_back(*i);
+			match++;
+		}
+	}
+	return legitcars;
 }

@@ -1,9 +1,6 @@
 #ifndef POLYNOMIAL_H
 #define POLYNOMIAL_H
 #endif
-
-#include <vector>
-#include <string>
 using namespace std;
 
 class Polynomial {
