@@ -44,37 +44,43 @@ int connect_tcp() {
     return sock;
 }
 
-bool close_connection(int sock) {
-	char *close = "Close\n";
-	char buffer[1024] = {0};
-	send(sock , close , strlen(close) , 0 );
-	int valread = read( sock , buffer, 1024);
-    if (valread == -1) {
-    	printf("graph.py cannot be stopped or is already stopped\n");
+bool send_message(int sock, string message) {
+	char buffer[1024] = {0}; 
+	const char* signal = message.c_str();
+    send(sock, signal, strlen(signal), 0);
+    int valread = read( sock , buffer, 1024);
+    if (!(valread != -1 && strcmp(buffer,"OK!\n") == 0)) {
     	return false;
     }
-    else if (strcmp(buffer,"OK!\n") == 0) {
-    	return true;
-    }
-    else {
-    	return false;
-    }
+    return true;
 }
 
-void send_graph(int sock, vector<Car>& cars) {
-	char *graph = "Graph\n"; 
-    char buffer[1024] = {0}; 
-    send(sock , graph , strlen(graph) , 0 );
-    int valread = read( sock , buffer, 1024);
-    if (valread == -1) {
+bool close_connection(int sock) {
+	if (!send_message(sock, "Close\n")) {
+    	printf("graph.py cannot be stopped or is already stopped\n");
+    	return false;
+	}
+    return true;
+}
+
+void send_one_graph(int sock, string name, vector<string>& data) {
+    if (!send_message(sock, "OneGraph\n"))
     	printf("Graph cannot be drawn, make sure graph.py is running in the background.\n");
-    }
-    else if (strcmp(buffer,"OK!\n") == 0) {
-    	return;
-    }
+    if (!send_message(sock, name))
+    	printf("Graph cannot be drawn, make sure graph.py is running in the background.\n");
     else {
-    	printf("Graph cannot be drawn.\n");
+    	vector<string>::const_iterator it = data.begin();
+    	while (it != data.end()){
+    		if (!send_message(sock, *it)) {
+    			cout<<"Graph cannot be drawn, connection interuppeted";
+    			break;
+    		}
+    		++it;
+    	}
+    	if (!send_message(sock, "EndGraph\n"))
+    		printf("Graph cannot be drawn, make sure graph.py is running in the background.\n");
     }
+    return;
 }
 
 bool check_input_num(string text) {
@@ -83,7 +89,7 @@ bool check_input_num(string text) {
     if (!text.empty() && it == text.end()) {
     	return true;
     }
-    else if (strcmp(text, "") == 0) {
+    else if (text == "") {
     	return false;
     }
     else {
@@ -98,6 +104,32 @@ string get_input_num(void) {
 		getline(cin, text);
 	}
 	return text;
+}
+
+bool search_one_car(vector<Car>& cars, Car& rcar) {
+	string input;
+	getline(cin, input);
+	vector<Car> results = search_car(cars, input);
+	if (results.size() == 0) {
+		cout<<"no car with the name was found"<<endl;
+		return false;
+	}
+	else {
+		int num = 1;
+		for (vector<Car>::iterator i = results.begin(); i != results.end(); ++i) {
+			cout << num << ": " << i->print_name() << endl;
+		    ++num;
+		}
+		cout << "Enter the number ("<<1<<"-"<<num-1<< ") of the car you want" << endl;
+		input = get_input_num();
+		int id = atoi(input.c_str());
+		if (id >= num || id < 1) {
+			cout << "No car is numbered " << id << endl;
+			return false;
+		}
+		rcar = results[id - 1];
+		return true;
+	}
 }
 
 int main() {
@@ -163,7 +195,7 @@ int main() {
 		cout << "Enter \"s\" to search for your car" << endl;
 		cout << "Enter \"xxx\"km/h to list noise data sorted by noise at the desired speed" << endl;
 		cout << "Enter \"ed\" to list noise data sorted by engine displacement" << endl;
-		cout << "Enter \"da\" to draw noise graph of all cars" << endl;
+		cout << "Enter \"da\" to draw noise/speed graph of a car" << endl;
 		cout << "Enter \"q\" to quit" << endl;
 		getline(cin, input);
 		if (input == "ed") {
@@ -216,29 +248,11 @@ int main() {
 			cout<<"predicted noises are at "<<speed<<" km/h"<<endl;
 		}
 		else if (input == "s") {
-			cout << "Enter the name of the car" << endl;
-			getline(cin, input);
-			vector<Car> results = search_car(cars, input);
-			if (results.size() == 0) {
-				cout<<"no car with the name was found"<<endl;
-			}
-			else {
-				int num = 1;
-				for (vector<Car>::iterator i = results.begin(); i != results.end(); ++i) {
-					cout << num << ": " << i->print_name() << endl;
-				    ++num;
-				}
-				cout << "Enter the number of the car you want" << endl;
-				input = get_input_num();
-				int id = atoi(input.c_str());
-				if (id >= num || id < 1) {
-					cout << "No car is numbered" << id << endl;
-					continue;
-				}
+			cout << "Enter the name of the car you want to search" << endl;
+			Car rcar;
+			if (search_one_car(cars, rcar)) {
 
-				Car& rcar = results[id - 1];
-
-				cout << "Enter the \"xxx\"km/h to print the noise data of" << rcar.print_name() << endl;
+				cout << "Enter the \"xxx\"km/h to print the noise data of " << rcar.print_name() << endl;
 
 				input = get_input_num();
 				double speed = atof(input.c_str());
@@ -257,8 +271,22 @@ int main() {
 			}
 		}
 		else if (input == "da") {
-			cout << "Drawing graphs..." << input << endl;
-			send_graph(sock, cars);
+			send_message(sock, "DrawGraph\n");
+			input = "Y";
+			while (input == "Y" || input == "y") {
+				cout << "Enter the name of the car you want to draw a graph for" << endl;
+				Car rcar;
+				if (search_one_car(cars, rcar)) {
+					vector<string> speeddata = rcar.get_speed_graph(250, 10);
+					send_one_graph(sock, rcar.print_name(), speeddata);
+				}
+				else {
+					cout << "No search results" << endl;
+				}
+				cout << "Type Y to add another car or any other key to continue" << endl;
+				getline(cin, input);
+			}
+			send_message(sock, "End\n");
 		}
 		else if (input == "q") {
 			break;

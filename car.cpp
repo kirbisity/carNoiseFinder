@@ -9,6 +9,7 @@
 using namespace std;
 
 #define MAXDIFF 2
+#define DBCONVERSION false /* determine if the noise fitting will use real energy value instead of dB value */
 
 Car::Car(void) {
 	target_noise = 0;
@@ -94,6 +95,15 @@ void Car::print_year_noise(void) const {
 	cout << endl;
 }
 
+vector<string> Car::get_speed_graph(int endspeed, int step) const {
+	vector<string> dbs;
+	for (int s = 0; s < endspeed + step; s += step) {
+		double db = energy_to_db(1000*equation.get_value((double) s));
+		dbs.push_back(to_string(s) + " " + to_string(db) + "\n");
+	}
+	return dbs;
+}
+
 bool compare_engine_up(Car c0, Car c1) { 
     return (c0.displacement < c1.displacement); 
 }
@@ -144,10 +154,16 @@ bool similar_name(string word1, string word2) {
 }
 
 double energy_to_db(double e) {
-	return 10*log10(e);
+	if (DBCONVERSION)
+		return 10*log10(e);
+	else
+		return e;
 }
 double db_to_energy(double d) {
-	return pow(10, (d/10));
+	if (DBCONVERSION) 
+		return pow(10, (d/10));
+	else
+		return d;
 }
 
 vector<Car> search_car(vector<Car>& cars, string input) {

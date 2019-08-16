@@ -29,6 +29,7 @@ public:
 	string print_name(void) const;
 	void print_displacement_noise(void) const;
 	void print_year_noise(void) const;
+	vector<string> get_speed_graph(int endspeed, int step) const;
 };
 
 bool compare_engine_up(Car c0, Car c1);

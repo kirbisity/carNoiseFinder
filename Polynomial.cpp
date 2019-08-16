@@ -74,7 +74,7 @@ void Polynomial::fit(vector<double> x, vector<double> y) {
     }
 }
 
-double Polynomial::get_value(double x) {
+double Polynomial::get_value(double x) const{
 	double val = 0;
 	double base = 1;
 	for (vector<double>::const_iterator i = coeffs.begin(); i != coeffs.end(); ++i) {
