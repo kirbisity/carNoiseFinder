@@ -13,16 +13,13 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
-/* in current directory */
-#include "Car.h"
+#include "car.h"
 #include "parser.h"
 
 using namespace std;
 
 #define NOISEENTRY 6
 #define PORT 8081
-
-/* g++ main.cpp parser.cpp Car.cpp Polynomial.cpp -o main.o */
 
 int connect_tcp() {
 	int sock = 0;
@@ -133,10 +130,12 @@ bool search_one_car(vector<Car>& cars, Car& rcar) {
 }
 
 int main() {
+	ofstream ox;
+	ox.open ("seveneight.txt");
+	ox << "df";
+	ox.close();
 	//string command = "python3 graph.py ";
     //system(command.c_str());
-
-
 
 	int sock = connect_tcp();
 	vector<Car> cars;

@@ -4,7 +4,7 @@
 #include <iomanip>
 #include <cmath>
 /* in current directory */
-#include "Polynomial.h"
+#include "polynomial.h"
 
 using namespace std;
 

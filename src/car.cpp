@@ -4,7 +4,7 @@
 #include <sstream>
 #include <math.h>
 /* in current directory */
-#include "Car.h"
+#include "car.h"
 
 using namespace std;
 
